@@ -1,15 +1,7 @@
-function [logL, logLMatrix, zt] = logLikelihood(params, X, Y, K, isGJR)
-    % Normalized the dataset in correct size
-    % 注意设定theta的数量和K的数量，还有Y的数量持平
-    nPeriods = 22;
-    nSamples = length(X);
-    nLowFreq = floor(nSamples/nPeriods);
-    X = X(1:nPeriods*nLowFreq);
-    Y = Y(1:nLowFreq, :);
-    X = reshape(X, nPeriods, nLowFreq);
-    nV = size(Y, 2);
-
+function [logL, logLMatrix, zt] = logLikelihood(params, Xmat, Y, K, isGJR)
     % Allocate parameters
+    [nLowFreq, nV] = size(Y);
+    nPeriods = size(Xmat, 1);
     mu    = params(1);
     alpha = params(2);
     beta  = params(3);
@@ -26,15 +18,15 @@ function [logL, logLMatrix, zt] = logLikelihood(params, X, Y, K, isGJR)
     theta = params(nGARCHs+nV:nGARCHs+2*nV-1);
     
     % Deflate observations and take squared residuals
-    epsilon = X - mu;
+    epsilon = Xmat - mu;
     epsilon2 = epsilon .* epsilon;
     % Preallocate shortRun and Variance as a matrix, which will be reshaped
     % Initial short-run component has the unconditional mean of one
     % Initial long-run component has the unconditional mean of sample average
     % Initialization will not affect likelihood computation
-    ShortRun = ones(nPeriods, nLowFreq);
+    git = ones(size(Xmat));
     tauAvg = exp(m0 + Y * theta)';
-    Variance = tauAvg .* ones(nPeriods, nLowFreq);
+    hit = tauAvg .* git;
     % Conditional variance recursion
     % Fixed tau in a week/month/quarter/year
     % Compute MIDAS weights
@@ -51,22 +43,21 @@ function [logL, logLMatrix, zt] = logLikelihood(params, X, Y, K, isGJR)
         % Compute short-run component
         for n = 1:nPeriods
             ind = (t-1)*nPeriods + n;
-            ShortRun(ind) = omega + alphaTau .* epsilon2(ind-1) + beta .* ShortRun(ind-1);
+            git(ind) = omega + alphaTau .* epsilon2(ind-1) + beta .* git(ind-1);
         end
         % Compute conditional variance
-        Variance(:, t) = tau .* ShortRun(:, t);
+        hit(:, t) = tau .* git(:, t);
     end
     
     % Compute GARCH-MIDAS log likelihood
-    logLMatrix = 0.5 .* ( log(2*pi.*Variance) + epsilon2 ./ Variance );
-    logLMatrix(isinf(logLMatrix)) = 1e6;
-    logLMatrix(:, 1) = 0;
+    logLMatrix = 0.5 .* ( log(2*pi.*hit) + epsilon2 ./ hit );
+    logLMatrix(:, 1:K) = [];
     logLMatrix = logLMatrix(:);
     logL = sum(logLMatrix);
     
     % Compute the innovation
     if nargout > 2
-        zt = (X(:) - mu)./sqrt(Variance(:));
+        zt = (Xmat(:) - mu)./sqrt(hit(:));
     end
 end
 
