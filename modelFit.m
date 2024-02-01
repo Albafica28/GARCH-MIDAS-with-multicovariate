@@ -1,8 +1,7 @@
 function result = modelFit(X, Y, varargin)
+
     % Initialization parameter values
     p = inputParser;
-    %addParameter(p, 'XDate', [], @(x)assert(isdatetime(x) && length(x)==size(X, 1)));
-    %addParameter(p, 'YDate', [], @(x)assert(isdatetime(x) && length(x)==size(Y, 1)));
     addParameter(p, 'XDate', []);
     addParameter(p, 'YDate', []);
     addParameter(p, 'isGJR', false, @(x)assert(islogical(x)));
@@ -42,6 +41,7 @@ function result = modelFit(X, Y, varargin)
             end
         end
     end
+
     % Setting the optimization algorithm
     opts = optimoptions('fmincon');
     opts.Display = p.Results.isDisplay;
@@ -52,16 +52,16 @@ function result = modelFit(X, Y, varargin)
     
     % Initialize Model Settings
     if p.Results.isGJR
-        lb = [-Inf; 0; 0; -Inf; 0; 1.001*ones(nV, 1); -inf(nV, 1)];
-        ub = [ Inf; 1; 1;  Inf; 1;    50*ones(nV, 1);  inf(nV, 1)];
+        lb = [-Inf; 0; 0; -50; 0; 1.001*ones(nV, 1); -inf(nV, 1)];
+        ub = [ Inf; 1; 1;  50; 1;    50*ones(nV, 1);  inf(nV, 1)];
         A = [0, 1, 1, 0, 0.5, zeros(1, nV), zeros(1, nV);
              0, 0, 0, 0, 0,   zeros(1, nV),  ones(1, nV)];
         parNames = ["mu"; "alpha"; "beta"; "m0"; "gamma";];
         params0 = [p.Results.mu; p.Results.alpha; p.Results.beta; p.Results.m0; 
             p.Results.gamma; p.Results.w1*ones(nV, 1); p.Results.theta*ones(nV, 1)];
     else
-        lb = [-Inf; 0; 0; -Inf; 1.001*ones(nV, 1); -inf(nV, 1)];
-        ub = [ Inf; 1; 1;  Inf;    50*ones(nV, 1);  inf(nV, 1)];
+        lb = [-Inf; 0; 0; -50; 1.001*ones(nV, 1); -inf(nV, 1)];
+        ub = [ Inf; 1; 1;  50;    50*ones(nV, 1);  inf(nV, 1)];
         A = [0, 1, 1, 0, zeros(1, nV), zeros(1, nV);
              0, 0, 0, 0, zeros(1, nV),  ones(1, nV)];
         parNames = ["mu"; "alpha"; "beta"; "m0";];
@@ -104,9 +104,9 @@ function gradient = GradFun(fun, params, lb, ub)
     delta  = zeros(1, nParam);
     [~, y] = fun(params);
     nSample = length(y);
-	gradient = zeros(nSample, nParam); % 构造多元函数的Jac矩阵，维度为因变量数量×自变量数量
-    v = eps^(1/3); % 中心差分的浮点精度
-    for i = 1:nParam % 计算每一个自变量的步长
+	gradient = zeros(nSample, nParam);
+    v = eps^(1/3); % Floating point accuracy of center difference
+    for i = 1:nParam % Calculate the step size for each variable
         delta(i) = min( v*max(abs(params(i)),1), min(params(i)-lb(i),ub(i)-params(i)) );
     end
     tmp = params;
@@ -122,5 +122,4 @@ function gradient = GradFun(fun, params, lb, ub)
         % cnter difference
         gradient(:, i) = (B-A)/2/delta(i);
     end
-    %gradient(sum())
 end
