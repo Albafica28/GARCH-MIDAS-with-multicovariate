@@ -1,30 +1,30 @@
 function result = modelFit(X, Y, varargin)
-    % This code is an implementation about GARCH-MIDAS model with with 
+    % This code is an implementation about GARCH-MIDAS model with with
     % multiple macroeconomic variables.
     %
-	% Customized by Albafica28.
-	% 
-	% usage:
+    % Customized by Albafica28.
+    %
+    % usage:
     %	result = cmaes(X, Y)
     %	result = cmaes(___, Name, Value)
-    %   
-	% input:
-	%   X: numeric vector, data of the high-frequency variable
-	%   Y: numeric matrix, data of multiple macroeconomic variables
-	%   Name-Value arguments:
-	%       XDate: date vector, the date of X
+    %
+    % input:
+    %   X: numeric vector, data of the high-frequency variable
+    %   Y: numeric matrix, data of multiple macroeconomic variables
+    %   Name-Value arguments:
+    %       XDate: date vector, the date of X
     %       YDate: date vector, the date of Y
     %       isGJR: logical scalar, Whether or not the GARCH equation contains an asymmetric term
     %       nLags: numeric integer, Lag order of low-frequency variables in the beta function
-    %       isDisplay: logical scalar, whether to print the details of the 
+    %       isDisplay: logical scalar, whether to print the details of the
     %                   optimization process on the screen
     %       nPeriods: numeric integer, number of the high-frequency variable
     %                   included between neighboring macroeconomic variables
     %       mu, alphe ...: numeric scalar, initial value of parameters
     %
-	% output:
-	%   result: struct, model fitting result
-	%   result.resultTab: table, parameter estimation result
+    % output:
+    %   result: struct, model fitting result
+    %   result.resultTab: table, parameter estimation result
     %   result.logLik: numeric scalar, negative log likelihood
     %   result.AIC: numeric scalar, AIC information value
     %   result.BIC: numeric scalar, BIC information value
