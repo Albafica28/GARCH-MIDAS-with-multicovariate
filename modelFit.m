@@ -1,4 +1,4 @@
-function result = modelFit(X, Y, varargin)
+function [result, sigmat, zt] = modelFit(X, Y, varargin)
     % This code is an implementation about GARCH-MIDAS model with with
     % multiple macroeconomic variables.
     %
@@ -7,6 +7,8 @@ function result = modelFit(X, Y, varargin)
     % usage:
     %	result = cmaes(X, Y)
     %	result = cmaes(___, Name, Value)
+    %   [result, sigmat] = cmaes(...)
+    %   [result, sigmat, zt] = cmaes(...)
     %
     % input:
     %   X: numeric vector, data of the high-frequency variable
@@ -28,8 +30,9 @@ function result = modelFit(X, Y, varargin)
     %   result.logLik: numeric scalar, negative log likelihood
     %   result.AIC: numeric scalar, AIC information value
     %   result.BIC: numeric scalar, BIC information value
-    %   result.zt:numeric vector, innovation
-
+    %   sigmat: numeric vector, conditional standard deviation
+    %   zt: numeric vector, innovation
+    
     % Initialization parameter values
     p = inputParser;
     addParameter(p, 'XDate', []);
@@ -101,7 +104,7 @@ function result = modelFit(X, Y, varargin)
     parNames = [parNames; "w"+string(1:nV)'; "theta"+string(1:nV)'];
     b = [1; 1]; 
     params1 = fmincon(fun, params0, A, b, [], [], lb, ub, [], opts);
-    [logLik, ~, zt] = fun(params1);
+    [logLik, ~, sigmat, zt] = fun(params1);
 
     % Compute the stderr of estimations 
     gradient = GradFun(fun, params1, lb, ub);
@@ -124,7 +127,7 @@ function result = modelFit(X, Y, varargin)
     result.logLik = -logLik;
     result.AIC = 2*logLik + 2*nParam;
     result.BIC = 2*logLik + log(nSample)*nParam;
-    result.zt = zt;
+    %result.zt = zt;
 end
 
 function gradient = GradFun(fun, params, lb, ub)

@@ -1,4 +1,4 @@
-function [logL, logLMatrix, zt] = logLikelihood(params, Xmat, Y, K, isGJR)
+function [logL, logLMatrix, sigmat, zt] = logLikelihood(params, Xmat, Y, K, isGJR)
     % Allocate parameters
     [nLowFreq, nV] = size(Y);
     nPeriods = size(Xmat, 1);
@@ -52,12 +52,16 @@ function [logL, logLMatrix, zt] = logLikelihood(params, Xmat, Y, K, isGJR)
     % Compute GARCH-MIDAS log likelihood
     logLMatrix = 0.5 .* ( log(2*pi.*hit) + epsilon2 ./ hit );
     logLMatrix(:, 1:K) = [];
+
     logLMatrix = logLMatrix(:);
     logL = sum(logLMatrix);
     
     % Compute the innovation
     if nargout > 2
-        zt = (Xmat(:) - mu)./sqrt(hit(:));
+        Xmat(:, 1:K) = [];
+        hit(:, 1:K) = [];
+        sigmat = sqrt(hit(:));
+        zt = (Xmat(:) - mu)./sigmat;
     end
 end
 
