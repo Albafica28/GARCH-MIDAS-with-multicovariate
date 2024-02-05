@@ -1,4 +1,6 @@
 function [logL, logLMatrix, sigmat, zt] = logLikelihood(params, Xmat, Y, K, isGJR)
+    % Some of the code references the MIDAS package by Hang Qian, 
+    % see https://www.mathworks.com/matlabcentral/fileexchange/45150-midas-matlab-toolbox for details.
     % Allocate parameters
     [nLowFreq, nV] = size(Y);
     nPeriods = size(Xmat, 1);

@@ -1,11 +1,9 @@
 function [result, sigmat, zt] = modelFit(X, Y, varargin)
     % This code is an implementation about GARCH-MIDAS model with with
     % multiple macroeconomic variables.
-    %
+    % More details can be found in Ghysels, E. (2016). MIDAS matlab toolbox.
     % Customized by Albafica28. 
-    % Some of the code references the xxx MIDAS package by Hang Qian, 
-    % see https://www.mathworks.com/matlabcentral/fileexchange/45150-midas-matlab-toolbox for details.
-    % Ghysels, E. (2016). MIDAS matlab toolbox. Last accessed on, 8(16), 2016.
+    % 
     % usage:
     %	result = cmaes(X, Y)
     %	result = cmaes(___, Name, Value)
