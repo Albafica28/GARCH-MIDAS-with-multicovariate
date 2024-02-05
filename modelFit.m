@@ -2,8 +2,10 @@ function [result, sigmat, zt] = modelFit(X, Y, varargin)
     % This code is an implementation about GARCH-MIDAS model with with
     % multiple macroeconomic variables.
     %
-    % Customized by Albafica28.
-    %
+    % Customized by Albafica28. 
+    % Some of the code references the xxx MIDAS package by Hang Qian, 
+    % see https://www.mathworks.com/matlabcentral/fileexchange/45150-midas-matlab-toolbox for details.
+    % Ghysels, E. (2016). MIDAS matlab toolbox. Last accessed on, 8(16), 2016.
     % usage:
     %	result = cmaes(X, Y)
     %	result = cmaes(___, Name, Value)
@@ -58,7 +60,8 @@ function [result, sigmat, zt] = modelFit(X, Y, varargin)
         nLowFreq = floor(size(X, 1)/p.Results.nPeriods);
         Y(1+nLowFreq:end, :) = [];
         X(1+(nLowFreq*p.Results.nPeriods):end) = [];
-        Xmat = reshape(X, p.Results.nPeriods, nLowFreq);  
+        Xmat = reshape(X, p.Results.nPeriods, nLowFreq); 
+        warning("Date sequence not found. Default will be used to match low and high frequency data")
     else
         Xmat = zeros(p.Results.nPeriods, nLowFreq);
         for t = 1:nLowFreq
@@ -103,13 +106,11 @@ function [result, sigmat, zt] = modelFit(X, Y, varargin)
     end
     parNames = [parNames; "w"+string(1:nV)'; "theta"+string(1:nV)'];
     b = [1; 1]; 
-    params1 = fmincon(fun, params0, A, b, [], [], lb, ub, [], opts);
-    [logLik, ~, sigmat, zt] = fun(params1);
+    [params1, logLik] = fmincon(fun, params0, A, b, [], [], lb, ub, [], opts); 
 
     % Compute the stderr of estimations 
     gradient = GradFun(fun, params1, lb, ub);
-    grad = gradient - mean(gradient);
-    BHHH = grad'*grad;
+    BHHH = gradient'*gradient;
     Stderr = sqrt(diag(inv(BHHH)));
     tValue = params1./Stderr;
     pValue = 2*tcdf(abs(tValue), inf, "upper");
@@ -127,7 +128,9 @@ function [result, sigmat, zt] = modelFit(X, Y, varargin)
     result.logLik = -logLik;
     result.AIC = 2*logLik + 2*nParam;
     result.BIC = 2*logLik + log(nSample)*nParam;
-    %result.zt = zt;
+    if nargout > 1
+        [~, ~, sigmat, zt] = fun(params1);
+    end
 end
 
 function gradient = GradFun(fun, params, lb, ub)
