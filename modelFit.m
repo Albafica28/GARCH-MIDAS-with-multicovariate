@@ -5,10 +5,10 @@ function [result, sigmat, zt] = modelFit(X, Y, varargin)
     % Customized by Albafica28. 
     % 
     % usage:
-    %	result = cmaes(X, Y)
-    %	result = cmaes(___, Name, Value)
-    %   [result, sigmat] = cmaes(...)
-    %   [result, sigmat, zt] = cmaes(...)
+    %	result = modelFit(X, Y)
+    %	result = modelFit(___, Name, Value)
+    %   [result, sigmat] = modelFit(...)
+    %   [result, sigmat, zt] = modelFit(...)
     %
     % input:
     %   X: numeric vector, data of the high-frequency variable
@@ -157,3 +157,4 @@ function gradient = GradFun(fun, params, lb, ub)
         gradient(:, i) = (B-A)/2/delta(i);
     end
 end
+
