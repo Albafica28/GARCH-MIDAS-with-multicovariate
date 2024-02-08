@@ -1,14 +1,14 @@
-function [result, sigmat, zt] = modelFit(X, Y, varargin)
+function [result, sigmat, zt, Xt, Xidx, XDateMat] = GARCHmidasFit(X, Y, varargin)
     % This code is an implementation about GARCH-MIDAS model with with
     % multiple macroeconomic variables.
     % More details can be found in Ghysels, E. (2016). MIDAS matlab toolbox.
     % Customized by Albafica28. 
     % 
     % usage:
-    %	result = modelFit(X, Y)
-    %	result = modelFit(___, Name, Value)
-    %   [result, sigmat] = modelFit(...)
-    %   [result, sigmat, zt] = modelFit(...)
+    %	result = GARCHmidasFit(X, Y)
+    %	result = GARCHmidasFit(___, Name, Value)
+    %   [result, sigmat] = GARCHmidasFit(...)
+    %   [result, sigmat, zt] = GARCHmidasFit(...)
     %
     % input:
     %   X: numeric vector, data of the high-frequency variable
@@ -54,6 +54,7 @@ function [result, sigmat, zt] = modelFit(X, Y, varargin)
     [nLowFreq, nV] = size(Y);
     XDate = p.Results.XDate;
     YDate = p.Results.YDate;
+    
     if isempty(XDate) || isempty(YDate)
         nLowFreq = floor(size(X, 1)/p.Results.nPeriods);
         Y(1+nLowFreq:end, :) = [];
@@ -62,16 +63,28 @@ function [result, sigmat, zt] = modelFit(X, Y, varargin)
         warning("Date sequence not found. Default will be used to match low and high frequency data")
     else
         Xmat = zeros(p.Results.nPeriods, nLowFreq);
+        Xidx = zeros(p.Results.nPeriods, nLowFreq);
+        %XDateMat = zeros(p.Results.nPeriods, nLowFreq);
         for t = 1:nLowFreq
-            subX = X(string(year(XDate))+string(month(XDate))==...
-                string(year(YDate(t)))+string(month(YDate(t))));
+            dateIdx = string(year(XDate))+string(month(XDate)) == ...
+                string(year(YDate(t)))+string(month(YDate(t)));
+            subX = X(dateIdx);
+            subDate = XDate(dateIdx);
             if length(subX) > p.Results.nPeriods
                 Xmat(:, t) = subX(1:p.Results.nPeriods);
+                XDateMat(:, t) = subDate(1:p.Results.nPeriods);
             elseif length(subX) < p.Results.nPeriods
                 Xmat(1:length(subX), t) = subX;
                 Xmat(1+length(subX):end, t) = mean(subX);
+                XDateMat(1:length(subX), t) = subDate;
+                XDateMat(1+length(subX):p.Results.nPeriods, t) = XDateMat(length(subX), t)...
+                    +(1:p.Results.nPeriods-length(subX));
+                if length(unique(month(XDateMat(:, t)))) > 1
+                    Xidx(month(XDateMat(:, t))==max(month(XDateMat(:, t))), t) = 1;
+                end
             else
                 Xmat(:, t) = subX;
+                XDateMat(:, t) = subDate;
             end
         end
     end
@@ -103,7 +116,7 @@ function [result, sigmat, zt] = modelFit(X, Y, varargin)
             p.Results.w1*ones(nV, 1); p.Results.theta*ones(nV, 1)];
     end
     parNames = [parNames; "w"+string(1:nV)'; "theta"+string(1:nV)'];
-    b = [1; 1]; 
+    b = [1; 1];
     [params1, logLik] = fmincon(fun, params0, A, b, [], [], lb, ub, [], opts); 
 
     % Compute the stderr of estimations 
@@ -116,6 +129,9 @@ function [result, sigmat, zt] = modelFit(X, Y, varargin)
 
     % Collate the fitting results
     nParam = length(params1);
+    XDateMat(:, 1:p.Results.nLags) = [];
+    Xmat(:, 1:p.Results.nLags) = [];
+    Xidx(:, 1:p.Results.nLags) = [];
     nSample = length(Xmat(:));
     resultTab.parhat = params1;
     resultTab.Stderr = Stderr;
@@ -128,6 +144,9 @@ function [result, sigmat, zt] = modelFit(X, Y, varargin)
     result.BIC = 2*logLik + log(nSample)*nParam;
     if nargout > 1
         [~, ~, sigmat, zt] = fun(params1);
+        Xt = Xmat(:);
+        Xidx = Xidx(:);
+        XDateMat = XDateMat(:);
     end
 end
 
