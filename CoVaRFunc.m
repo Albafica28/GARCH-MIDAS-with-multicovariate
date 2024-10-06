@@ -1,7 +1,8 @@
 function CoVaR = CoVaRFunc(vineFamhat, vineParhat, q, alpha)
     % This code is an implementation for 4-dimension Conditional
     % Value-at-Risk (CoVaR) via D-vinecopula model.
-    % Details about vinecopula can be found in https://github.com/ElsevierSoftwareX/SOFTX-D-21-00039.git
+    % Details about vinecopula can be found in 
+    % https://github.com/ElsevierSoftwareX/SOFTX-D-21-00039.git
     % Customized by Albafica28. 
     % 
     % usage:
